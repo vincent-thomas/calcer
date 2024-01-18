@@ -1,25 +1,28 @@
-use calc::{MathOperations, Operation, Term, Value};
+use std::env::args;
+
+use calc::{
+    parser::TermParser,
+    term::{MathOperations, Operation, Term, Value},
+};
+use clier_parser::Argv;
 
 fn main() {
-    let mut float_vector: Vec<f32> = Vec::new();
+    let args: Vec<String> = args().collect();
 
-    for i in -10..=10 {
-        let value = i as f32;
-        float_vector.push(value);
-    }
+    let test = Argv::from(args.as_slice());
 
-    // Function: y=x^2+2x+x in -10 =< x =< 10
-    float_vector.iter().for_each(|value| {
-        let problem = Term::new(
-            Value::Number(*value).pow(2),
-            vec![(
-                Operation::Plus,
-                Value::Parantes(Box::new(Term::new(
-                    Value::Number(*value * 2.0),
-                    vec![(Operation::Plus, Value::Number(*value))],
-                ))),
-            )],
-        );
-        println!("{} {}", value, problem.solve());
-    })
+    let parser = TermParser::from("5*5/5");
+    parser.parse();
+    // let problem = Term::new(
+    //     Value::Number(8.2).sqrt(),
+    //     vec![(
+    //         Operation::Div,
+    //         Value::Parantes(Box::new(Term::new(
+    //             Value::Number(2.0),
+    //             vec![(Operation::Plus, Value::Number(3.4))],
+    //         )))
+    //         .sqrt(),
+    //     )],
+    // );
+    // println!("{}", problem.solve());
 }
