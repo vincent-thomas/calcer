@@ -1,11 +1,7 @@
-use std::os::raw;
-
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Copy)]
 pub enum Operation {
     Div,
     Mult,
-    Plus,
-    Minus,
 }
 
 impl Operation {
@@ -13,16 +9,21 @@ impl Operation {
         match raw {
             "/" => Self::Div,
             "*" => Self::Mult,
-            "+" => Self::Plus,
-            "-" => Self::Minus,
             _ => panic!("Invalid operation"),
+        }
+    }
+
+    pub fn apply(self, a: f64, b: f64) -> f64 {
+        match self {
+            Self::Div => a / b,
+            Self::Mult => a * b,
         }
     }
 }
 
 #[derive(Debug, Clone)]
 pub enum Value {
-    Number(f32),
+    Number(f64),
     Parantes(Box<Term>),
 }
 
@@ -70,7 +71,7 @@ impl Term {
             operations,
         }
     }
-    pub fn solve(&self) -> f32 {
+    pub fn solve(&self) -> f64 {
         let mut total = match self.value.clone() {
             Value::Number(number) => number,
             Value::Parantes(term) => (*term).solve(),
@@ -84,8 +85,8 @@ impl Term {
                 Value::Parantes(param) => (operation, param.solve()),
             })
             .for_each(|value| match value.0.clone() {
-                Operation::Plus => total += value.1,
-                Operation::Minus => total -= value.1,
+                // Operation::Plus => total += value.1,
+                // Operation::Minus => total -= value.1,
                 Operation::Mult => total *= value.1,
                 Operation::Div => total /= value.1,
             });
