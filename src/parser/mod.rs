@@ -2,7 +2,7 @@ mod operation;
 
 use operation::Operation;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 pub struct Number {
     value: Int,
     power_to: Int,
@@ -41,14 +41,14 @@ impl Number {
         match (self.value, self.power_to) {
             (Int::Value(value), Int::Value(pow)) => value.powf(pow),
             (Int::Value(value), Int::Unknown) => {
-                value.powf(to_replace_unknown.expect("No value to replace unknown"))
+                value.powf(to_replace_unknown.expect("No value to use for x"))
             }
-            (Int::Unknown, Int::Value(pow)) => to_replace_unknown
-                .expect("No value to replace unknown")
-                .powf(pow),
+            (Int::Unknown, Int::Value(pow)) => {
+                to_replace_unknown.expect("No value to use for x").powf(pow)
+            }
             (Int::Unknown, Int::Unknown) => to_replace_unknown
                 .expect("No value to replace unknown")
-                .powf(to_replace_unknown.expect("No value to replace unknown")),
+                .powf(to_replace_unknown.expect("No value to use for x")),
         }
     }
 }
