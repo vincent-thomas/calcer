@@ -1,4 +1,4 @@
-use crate::parser::TermParser;
+use crate::{graph::Graph, parser::TermParser};
 
 use operation::Operation;
 mod operation;
@@ -59,11 +59,9 @@ impl Problem {
     pub fn write_with_diagram(&self, start: i64, end: i64) {
         let window_x = end - start + 1;
 
-        dbg!(window_x);
+        let mut graph = Graph::new(start, end, self.clone(), 10);
 
-        let mut graph = Graph::new(start, end, self.clone(), 10.0);
-
-        let origo = graph.set_origo(start, end);
+        let origo = graph.set_origo();
 
         graph.matrix.iter().for_each(|v| {
             println!("{:?}", v);
@@ -71,105 +69,11 @@ impl Problem {
     }
 }
 
-#[derive(Debug, Clone)]
-enum CordinateValue {
-    Empty,
-    Value(Cordinate),
-    Origo,
-}
-
-#[derive(Debug, Clone)]
-struct Cordinate(usize, usize);
-
 impl From<&str> for Problem {
     fn from(raw_input: &str) -> Self {
         let str_vec = raw_input.split("").collect::<Vec<&str>>()[1..].to_vec();
 
         let parsed_input = transform_raw_to_numbers(&str_vec);
         Self(parsed_input)
-    }
-}
-
-struct Graph {
-    pub matrix: Vec<Vec<CordinateValue>>,
-    origo: Option<Cordinate>,
-    problem: Problem,
-}
-
-impl Graph {
-    pub fn new(def_start: i64, def_end: i64, problem: Problem, incr: f64) -> Self {
-        let max_value = problem.clone().solve(Some(def_end as f64));
-        let min_value = problem.clone().solve(Some(def_start as f64));
-        dbg!(min_value, max_value);
-        let minus_origo_y = (min_value / incr).round().abs();
-        let plus_origo_y = (max_value / incr).ceil().abs();
-
-        dbg!(plus_origo_y, minus_origo_y);
-
-        Self {
-            origo: None,
-            matrix: vec![
-                vec![CordinateValue::Empty; (def_end - def_start + 1) as usize];
-                minus_origo_y as usize + plus_origo_y as usize + 1
-            ],
-            problem,
-        }
-    }
-
-    pub fn set_origo(&mut self, def_start: i64, def_end: i64) -> Option<Cordinate> {
-        dbg!(def_start, def_end);
-
-        self.matrix = self
-            .matrix
-            .iter()
-            .enumerate()
-            .map(|(y_index, value)| {
-                value
-                    .iter()
-                    .enumerate()
-                    .map(
-                        |(x_index, _)| {
-                            // dbg!(x_index, y_index);
-                            match def_start < 0 {
-                                true => {
-                                    if
-                                    // self.matrix.len() as i64 - y_index as i64 - 1 == -def_start
-                                    // &&
-                                    x_index as i64 == -def_start {
-                                        self.origo = Some(Cordinate(x_index, y_index));
-                                        CordinateValue::Origo
-                                    } else {
-                                        CordinateValue::Empty
-                                    }
-                                }
-                                false => CordinateValue::Empty,
-                            }
-                        }, // match def_start >= 0 {
-                           //     false => {
-                           //         dbg!(x_index, y_index);
-                           //         if 10 - y_index as i64 - 1 == def_start
-                           //             && x_index as i64 == tmp_origin_x
-                           //         {
-                           //             self.origo = Some(Cordinate(x_index, y_index));
-                           //             CordinateValue::Origo
-                           //         } else {
-                           //             CordinateValue::Empty
-                           //         }
-                           //     }
-                           //     true => {
-                           //         dbg!(x_index, y_index);
-                           //         if y_index as i64 == tmp_origin_x && x_index == 0 {
-                           //             self.origo = Some(Cordinate(tmp_origin_x as usize, 0));
-                           //             CordinateValue::Origo
-                           //         } else {
-                           //             CordinateValue::Empty
-                           //         }
-                           //     }
-                           // }
-                    )
-                    .collect()
-            })
-            .collect::<Vec<Vec<CordinateValue>>>();
-        self.origo.clone()
     }
 }
