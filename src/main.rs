@@ -10,20 +10,20 @@ fn main() {
 
     let commands = &args.commands[1..];
 
+    let problem = args.flags.get("problem").expect("Missing problem");
+
     match commands
         .first()
         .unwrap_or(&"NOT_A_COMMAND".to_string())
         .as_str()
     {
         "solve" => {
-            let problem_raw: &str = args.flags.get("problem").expect("Missing problem");
-            let problem = Problem::from(problem_raw);
+            let problem = Problem::from(problem.as_str());
 
             println!("{}", problem.clone().solve(None))
         }
         "graph" => {
-            let problem_raw: &str = args.flags.get("problem").unwrap();
-            let raw_x = match args.flags.get("range") {
+            let raw_x = match args.flags.get("definition") {
                 Some(range) => range,
                 None => {
                     println!("Missing range");
@@ -31,10 +31,10 @@ fn main() {
                 }
             };
 
-            let problem = Problem::from(problem_raw);
-            let raw_tal = raw_x.split("..").collect::<Vec<&str>>();
+            let problem = Problem::from(problem.as_str());
+            let raw_tal: Vec<&str> = raw_x.split("..").collect();
             let start: i64 = raw_tal[0].parse().expect("Not a number");
-            let end = raw_tal[1].parse::<i64>().expect("Not a number");
+            let end: i64 = raw_tal[1].parse().expect("Not a number");
 
             problem.write_with_diagram(start, end);
         }

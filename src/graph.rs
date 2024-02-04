@@ -84,8 +84,8 @@ impl<'a> Graph<'a> {
         let max_original_value = self.max_value;
         let min_scaled = 0.0;
         let max_scaled = self.matrix.len() as f64 - 1.0;
-        let y = self.matrix.len()
-            - 1
+        let y = self.matrix.len() as f64
+            - 1.0
             - scale_value(
                 self.average_value.unwrap(),
                 min_original_value,
@@ -94,12 +94,12 @@ impl<'a> Graph<'a> {
                 max_scaled,
             )
             .round()
-            .abs() as usize;
+            .abs();
 
-        if y != 0 {
+        if y != 0.0 && y >= 0.0 {
             for x_index in 0..self.matrix[0].len() {
-                if self.matrix[y][x_index] == CordinateValue::Empty {
-                    self.matrix[y][x_index] = CordinateValue::Average;
+                if self.matrix[y as usize][x_index] == CordinateValue::Empty {
+                    self.matrix[y as usize][x_index] = CordinateValue::Average;
                 }
             }
         }
@@ -133,6 +133,9 @@ impl<'a> Graph<'a> {
                 * (self.matrix.len() as f64 - 1.0);
 
             let y_index = y_float.floor() as usize;
+            if y_index >= self.matrix.len() {
+                return None;
+            }
             origo = Some((origo_x, y_index));
             self.matrix[origo.unwrap().1][origo.unwrap().0] = CordinateValue::Origo;
         } else if self.def_start == 0 && self.def_end > 0 {
@@ -219,7 +222,7 @@ impl<'a> Graph<'a> {
                 .for_each(|y| print!("{y}"));
             let number = scale_value(
                 i as f64,
-                self.matrix.len() as f64 - 1.0,
+                self.matrix.len() as f64,
                 0.0,
                 self.min_value,
                 self.max_value,
@@ -227,8 +230,39 @@ impl<'a> Graph<'a> {
             .round() as i64;
             print!(" {}", number);
 
+            if i == 0 {
+                print!(" = Y");
+            }
+            let is_average = !y
+                .iter()
+                .filter(|x| x == &&CordinateValue::Average)
+                .collect::<Vec<&CordinateValue>>()
+                .is_empty();
+            let is_median = !y
+                .iter()
+                .filter(|x| x == &&CordinateValue::Median)
+                .collect::<Vec<&CordinateValue>>()
+                .is_empty();
+
+            if is_average && !is_median {
+                print!(" {} average", "<--".red());
+            }
+
+            if !is_average && is_median {
+                print!(" {} median", "<--".dimmed().white());
+            }
             println!();
         });
+        println!(
+            "{} {} {} = X",
+            self.def_start,
+            if self.matrix[0].len() > 5 {
+                "-".repeat(self.matrix[0].len() - self.def_end.to_string().len() - 4)
+            } else {
+                "".to_string()
+            },
+            self.def_end
+        );
 
         let footer = f!(
             "
