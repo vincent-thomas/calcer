@@ -38,38 +38,39 @@ impl<'a> Graph<'a> {
         let mut rows = HashMap::new();
 
         for x in def_start..def_end + 1 {
-            let y = problem.clone().solve(Some(x as f64));
+            let mut y = problem.clone().solve(Some(x as f64));
+
+            if y == f64::INFINITY {
+                y = problem.clone().solve(Some(x as f64 - 0.001))
+            }
+            if y == f64::NEG_INFINITY {
+                y = problem.clone().solve(Some(x as f64 + 0.001))
+            }
+
             rows.insert(y.to_string(), x);
         }
 
-        let mut y_values = rows
+        let iter = rows
             .keys()
-            .map(|y| y.parse::<i64>().unwrap())
-            .collect::<Vec<i64>>();
+            .map(|y| y.parse::<f64>().unwrap().round() as i64);
 
-        y_values.sort();
+        let max_value = iter.clone().max().unwrap().clone() as f64;
 
-        let max_value = (def_start..def_end + 1)
-            .map(|x| problem.clone().solve(Some(x as f64)) as i64)
-            .max()
-            .unwrap() as f64;
-
-        let min_value = (def_start..def_end + 1)
-            .map(|x| problem.clone().solve(Some(x as f64)) as i64)
-            .min()
-            .unwrap() as f64;
+        let min_value = iter.clone().min().unwrap().clone() as f64;
 
         Self {
             origo: None,
-            matrix: Graph::create_matrix((def_end + 1 - def_start) as usize, rows.len()),
-
+            matrix: Graph::create_matrix(
+                (def_end + 1 - def_start) as usize,
+                (def_end - def_start + 1) as usize,
+            ),
             problem,
             def_end,
             def_start,
             min_value,
             max_value,
             average_value: None,
-            median: (y_values.len() - 1) as i64 / 2,
+            median: (iter.len() - 1) as i64 / 2,
         }
     }
 
@@ -77,8 +78,8 @@ impl<'a> Graph<'a> {
         let sum: f64 = (self.def_start..self.def_end + 1)
             .map(|x| self.problem.clone().solve(Some(x as f64)))
             .sum();
-        self.average_value = Some(sum / (self.def_end - self.def_start) as f64);
 
+        self.average_value = Some(sum / (self.def_end - self.def_start) as f64);
         let min_original_value = self.min_value;
         let max_original_value = self.max_value;
         let min_scaled = 0.0;
@@ -151,8 +152,13 @@ impl<'a> Graph<'a> {
     pub fn write(&mut self) -> Self {
         (self.def_start..self.def_end + 1).for_each(|equation_x| {
             let equation_y = self.problem.clone().solve(Some(equation_x as f64));
-
-            let original_value = equation_y;
+            let original_value = if equation_y == f64::INFINITY {
+                self.problem.clone().solve(Some(equation_x as f64 + 0.001))
+            } else if equation_y == f64::NEG_INFINITY {
+                self.problem.clone().solve(Some(equation_x as f64 - 0.001))
+            } else {
+                equation_y
+            };
 
             let x = (equation_x - self.def_start) as usize;
             let min_original_value = self.min_value;
@@ -160,17 +166,17 @@ impl<'a> Graph<'a> {
             let min_scaled = 0.0;
             let max_scaled = self.matrix.len() as f64 - 1.0;
 
-            let y = self.matrix.len()
-                - 1
-                - scale_value(
-                    original_value,
-                    min_original_value,
-                    max_original_value,
-                    min_scaled,
-                    max_scaled,
-                )
-                .round()
-                .abs() as usize;
+            let scaled = scale_value(
+                original_value,
+                min_original_value,
+                max_original_value,
+                min_scaled,
+                max_scaled,
+            )
+            .round()
+            .abs() as usize;
+
+            let y = self.matrix.len() - 1 - scaled.min(self.matrix.len() - 1);
 
             if self.matrix[y as usize][x] != CordinateValue::Origo {
                 self.matrix[y as usize][x] = CordinateValue::Value;
@@ -232,7 +238,6 @@ median = {median_clr},
 middle_value = {medelvarde}
 
 origo and origo line = {origo}, {origo_line}
-
 ",
             values_clr = "*".green(),
             median_clr = "-".dimmed().white(),

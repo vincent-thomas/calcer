@@ -60,7 +60,7 @@ impl Problem {
         let mut graph = Graph::new(start, end, self);
         graph.set_origo();
         graph.write();
-        graph.average();
+        // graph.average();
         graph.median();
         graph.graph();
     }

@@ -3,7 +3,7 @@
 version = 3
 
 [[package]]
-name = "calc"
+name = "calcer"
 version = "0.1.0"
 dependencies = [
  "clier_parser",
