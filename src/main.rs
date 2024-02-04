@@ -8,6 +8,12 @@ fn main() {
 
     let args = Argv::from(args.as_slice());
 
+    // let commands = &args.commands[1..];
+
+    // dbg!(commands);
+
+    // dbg!(args.flags);
+
     let problem_raw: &str = args.flags.get("problem").unwrap();
     let raw_x = args.flags.get("range");
 

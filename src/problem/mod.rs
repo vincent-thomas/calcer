@@ -57,15 +57,12 @@ impl Problem {
     }
 
     pub fn write_with_diagram(&self, start: i64, end: i64) {
-        let window_x = end - start + 1;
-
-        let mut graph = Graph::new(start, end, self.clone(), 10);
-
-        let origo = graph.set_origo();
-
-        graph.matrix.iter().for_each(|v| {
-            println!("{:?}", v);
-        });
+        let mut graph = Graph::new(start, end, self);
+        graph.set_origo();
+        graph.write();
+        graph.average();
+        graph.median();
+        graph.graph();
     }
 }
 
