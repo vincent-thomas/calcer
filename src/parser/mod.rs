@@ -1,14 +1,20 @@
+mod int;
 mod operation;
+
+use int::Int;
 
 use operation::Operation;
 
+// Structen använd för att representera ett tal i en ekvation ex (x^2, 2)
 #[derive(Debug, Clone, Copy)]
 pub struct Number {
     value: Int,
     power_to: Int,
 }
 
+// Ett trait som implementeras, för att typen "&str" (ung en immutable pointer till en sträng) ska kunna konverteras till Number
 impl From<&str> for Number {
+    // Tar in en sträng och returnerar ett Number
     fn from(raw_number: &str) -> Self {
         let can_be_power_to = raw_number.contains('^');
 
@@ -36,6 +42,8 @@ impl From<&str> for Number {
     }
 }
 
+// Implementerar Numbers solve funktion, som tar in en immutable pointer till sigsjälv och en Option<f64> och returnerar ett f64
+// Option<f64> används för att kunna byta eventuella x-värden i ekvationen
 impl Number {
     pub fn solve(&self, to_replace_unknown: Option<f64>) -> f64 {
         match (self.value, self.power_to) {
@@ -53,25 +61,11 @@ impl Number {
     }
 }
 
-#[derive(Debug, Clone, Copy)]
-pub enum Int {
-    Value(f64),
-    Unknown,
-}
-
-impl From<&str> for Int {
-    fn from(value: &str) -> Self {
-        if value == "x" {
-            Self::Unknown
-        } else {
-            Self::Value(value.parse::<f64>().unwrap())
-        }
-    }
-}
-
 #[derive(Debug, Clone)]
 pub struct TermParser(pub Vec<(Number, Option<Operation>)>);
 
+// Hjälpfunktion som omvandlar en vektor av charactärer i ett matteproblem, och parsar det till en vektor av Number och Option<Operation>, den är Option<...> pga sista elemet kan inte ha en operation efter sig
+// Tar emot en pointer till en array (immutable datatyp)
 fn transform_raw_to_numbers(raw: &[&str]) -> Vec<(Number, Option<Operation>)> {
     let mut numbers = Vec::new();
 
@@ -101,7 +95,10 @@ fn transform_raw_to_numbers(raw: &[&str]) -> Vec<(Number, Option<Operation>)> {
     numbers
 }
 
+// Implementerar TermParser
 impl TermParser {
+    // Tar in TermParser och en Option<f64> och löser hela problemet som finns innuti TermParserstructen -> f64, Option<f64> är till om det finns en eventuellt x-värde som ska bytas ut
+    // Den gör detta genom att iterera över alla termer och operationer och applicera operationen på termerna
     pub fn solve(self, to_replace_unknown: Option<f64>) -> f64 {
         let parsed_input = self.0.clone();
         let first_value = parsed_input.first().expect("No first value");
@@ -124,8 +121,11 @@ impl TermParser {
     }
 }
 
+// From traiten är en trait som låter oss konvertera &str till TermParser
 impl From<&str> for TermParser {
+    // Tar in en &str och returnerar en TermParser
     fn from(raw_input: &str) -> Self {
+        // Fixar lite arrayoperationer på grund av rusts skumma sätt att hantera vargs, exen kommer med som första argument så den tas bort genom [1..], och sista elementet tas bort genom att poppa det pga det alltid är en tom &str av nån anledning
         let mut str_vec = raw_input.split("").collect::<Vec<&str>>()[1..].to_vec();
         str_vec.pop();
         Self(transform_raw_to_numbers(&str_vec))
