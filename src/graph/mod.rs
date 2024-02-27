@@ -249,7 +249,6 @@ impl<'a> Graph<'a> {
 
     // Denna funktionen tar emot en pointer till en initierad struct och bara renderar matrixen till en graph. Inget superkompliceat.
     pub fn graph(&self) {
-        self.matrix.iter().for_each(|row| println!("{:?}", row));
         self.matrix.iter().enumerate().for_each(|(i, y)| {
             y.iter()
                 .map(|x| match x {
