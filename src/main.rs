@@ -1,55 +1,91 @@
-use std::env::args;
-
 use calcer::problem::Problem;
-use clier_parser::Argv;
+use clier::{
+    display::Displayer,
+    hooks::{use_double_dash, use_flag, FlagError},
+    run::ExitCode,
+    CliMeta, Clier, CmdMeta, Commands,
+};
 
-fn main() {
-    // Råa args from terminalen
-    let args: Vec<String> = args().collect();
+fn meta() -> CliMeta {
+    CliMeta {
+        name: "clier".to_string(),
+        description: "Clier is a nice math thing".to_string(),
+        version: Some((0, 1, 0)),
+        usage: Some("[command]".to_string()),
+    }
+}
 
-    // Parsar argsen till en Argv struct, (mitt externa library https://docs.rs/clier_parser)
-    let args = Argv::from(args.as_slice());
+fn solve_command() -> Commands {
+    Commands::Command {
+        meta: CmdMeta::new("solve", "only do problems"),
+        handler: |clier| {
+            let error = Displayer::Error {};
+            let problem_str = match use_double_dash(&clier) {
+                Ok(value) => value,
+                Err(_) => {
+                    error.write("Problem is required and should be defined after '--'");
+                    return ExitCode(1);
+                }
+            };
+            let problem = Problem::from(problem_str.as_str());
+            println!("{}", problem.solve(None));
+            ExitCode(0)
+        },
+    }
+}
 
-    // Tar bort första argumentet som är programnamnets exe
-    let commands = &args.commands[1..];
+fn graph_command() -> Commands {
+    Commands::Command {
+        meta: CmdMeta::new("graph", "Use for graphing math problem with 'x'"),
+        handler: |clier| {
+            let error = Displayer::Error {};
 
-    // Tar ut en flagga här
-    let problem = args.flags.get("problem").expect("Missing problem");
-    // Problem::from() tar en pointer till en statisk sträng och gör det till ett Problem struct
-    // Den parsar matteproblemet och gör så att det kan lösas
-    let problem = Problem::from(problem.as_str());
+            let flag_result: Result<String, FlagError> =
+                use_flag("definition", Some('d'), &clier).try_into();
 
-    // 'match' är som en switch statement i många språk fast i rust MÅSTE alla möjligheter av värdet hanteras
-    match commands
-        .first()
-        .unwrap_or(&"NOT_A_COMMAND".to_string()) // Unwrap or är en metod som antingen returnerar värdet om det finns eller en default som i detta fall är "NOT_A_COMMAND"
-        .as_str()
-    {
-        "solve" => {
-            // Bara ett matteproblem inte något okänt värde, därför None
-            println!("{}", problem.clone().solve(None))
-        }
-        "graph" => {
-            let raw_x = match args.flags.get("definition") {
-                Some(range) => range,
-                None => {
-                    println!("Missing range");
-                    std::process::exit(1);
+            let flag = match flag_result {
+                Ok(value) => value,
+                Err(_) => {
+                    error.write("Missing range");
+                    return ExitCode(1);
+                }
+            };
+            // Första elemented är start, och andra (sista) är end
+            let raw_tal: Vec<&str> = flag.split("..").collect();
+            let start: i64 = match raw_tal[0].parse() {
+                Ok(value) => value,
+                Err(_) => {
+                    error.write("Failed to parse start range");
+                    return ExitCode(1);
+                }
+            };
+            let end: i64 = match raw_tal[1].parse() {
+                Ok(value) => value,
+                Err(_) => {
+                    error.write("Failed to parse end range");
+                    return ExitCode(1);
                 }
             };
 
-            // Första elemented är start, och andra (sista) är end
-            let raw_tal: Vec<&str> = raw_x.split("..").collect();
-            let start: i64 = raw_tal[0].parse().expect("Not a number");
-            let end: i64 = raw_tal[1].parse().expect("Not a number");
+            let problem_str = match use_double_dash(&clier) {
+                Ok(value) => value,
+                Err(_) => {
+                    error.write("Problem is not defined");
+                    return ExitCode(1);
+                }
+            };
 
-            // Helper funktion som skriver ut en graf med problemet
+            let problem = Problem::from(problem_str.as_str());
+
             problem.write_with_diagram(start, end);
-        }
-        // Kommand som inte finns
-        _ => {
-            println!("Unknown command");
-            std::process::exit(1);
-        }
+            ExitCode(0)
+        },
     }
+}
+
+fn main() -> clier::run::ExitCode {
+    let clier_builder = Clier::parse();
+    let clier = clier_builder.meta(meta());
+    let app = clier.runnable(vec![solve_command(), graph_command()]);
+    app.run()
 }
