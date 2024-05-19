@@ -45,7 +45,7 @@
             };
           in
           rustPlatform.buildRustPackage {
-            name = "calcer";
+            name = "zero-to-nix-rust";
             src = ./.;
             cargoLock = {
               lockFile = ./Cargo.lock;
