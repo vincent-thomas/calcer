@@ -12,9 +12,9 @@ dependencies = [
 
 [[package]]
 name = "clier"
-version = "0.7.2"
+version = "0.7.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e3fa1f2c6e6ea6f732bb94e9f396a8f536ae97f0693f74e45d29f32722f02d9d"
+checksum = "5e419a026c43aa513d77fc506d7079927efd232b66b6a10bd43021ceecf2c0a9"
 dependencies = [
  "clier_parser",
  "console",

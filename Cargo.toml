@@ -7,5 +7,5 @@ license = "MIT"
 repository = "https://github.com/vincent-thomas/clier"
 
 [dependencies]
-clier = "0.7.0"
+clier = "0.7.3"
 colored = "2.1.0"
